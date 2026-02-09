@@ -1,0 +1,68 @@
+# Dapr PubSub Component using Kafka for Production
+#
+# Task: T-557 - Create k8s/dapr-components/pubsub-kafka.yaml
+# Phase: Phase V - Event-Driven Architecture
+#
+# This component configures Dapr to use Apache Kafka as the message broker
+# for production deployments. Kafka provides:
+#   - Durable event log with replay capability
+#   - High throughput (1000+ events/sec)
+#   - Event ordering per partition
+#   - Scalable consumer groups
+#
+# For local development, use pubsub-redis.yaml instead.
+#
+# Usage:
+#   kubectl apply -f pubsub-kafka.yaml -n todo-app
+#
+# Prerequisites:
+#   - Kafka cluster installed (Bitnami Helm chart or managed service)
+#   - Dapr control plane installed
+#
+# Documentation:
+#   https://docs.dapr.io/reference/components-reference/supported-pubsub/setup-apache-kafka/
+
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: todo-pubsub
+  namespace: todo-app
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+    # Kafka broker addresses
+    - name: brokers
+      value: "kafka.todo-app.svc.cluster.local:9092"
+    # Consumer group ID (uses app-id from Dapr annotation by default)
+    - name: consumerGroup
+      value: "{appId}"
+    # Client ID for Kafka connections
+    - name: clientID
+      value: "{appId}"
+    # Authentication type (none for local, password for production)
+    - name: authType
+      value: "none"
+    # Enable idempotent producer (exactly-once semantics)
+    - name: idempotent
+      value: "true"
+    # Number of partitions for auto-created topics
+    - name: initialOffset
+      value: "oldest"
+    # Maximum message size (1MB default)
+    - name: maxMessageBytes
+      value: "1048576"
+    # Consumer configuration
+    - name: consumeRetryInterval
+      value: "1s"
+    # Disable auto-commit for at-least-once delivery
+    - name: disableEntityManagement
+      value: "false"
+
+# Scopes restrict which apps can use this component
+scopes:
+  - backend-api
+  - reminder-service
+  - notification-service
+  - audit-service
+  - recurring-generator

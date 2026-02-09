@@ -1,0 +1,33 @@
+# AI-Generated Helm Chart Metadata
+# Generated: 2026-01-08
+# Purpose: Helm chart for Todo application deployment
+
+apiVersion: v2
+name: todo-app
+description: AI-powered Todo application with chat functionality
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+
+keywords:
+  - todo
+  - fastapi
+  - nextjs
+  - ai
+  - openai
+  - chatbot
+
+maintainers:
+  - name: AI Agent
+    email: agent@speckit.dev
+
+sources:
+  - https://github.com/your-org/todo-app
+
+home: https://github.com/your-org/todo-app
+
+icon: https://raw.githubusercontent.com/your-org/todo-app/main/logo.png
+
+annotations:
+  category: Application
+  licenses: MIT

@@ -1,0 +1,110 @@
+# Bitnami Kafka Helm Chart Values for Local (Minikube) Development
+#
+# Task: T-542 - Create k8s/kafka/values-local.yaml
+# Phase: Phase V - Event-Driven Architecture
+#
+# These values configure a single-broker Kafka cluster optimized for local
+# development with minimal resource requirements.
+#
+# Usage:
+#   helm install kafka bitnami/kafka -n todo-app -f values-local.yaml
+#
+# Documentation:
+#   https://github.com/bitnami/charts/tree/main/bitnami/kafka
+
+# Global settings
+global:
+  storageClass: ""
+
+# Kafka broker configuration
+replicaCount: 1
+
+# Disable persistence for local development (faster startup, no disk space)
+persistence:
+  enabled: false
+  size: 8Gi
+
+# Resource limits optimized for Minikube
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# Kafka configuration
+config:
+  # Topic deletion enabled for development
+  deleteTopicEnable: true
+  # Auto-create topics when producer sends to non-existent topic
+  autoCreateTopicsEnable: true
+  # Default partition count for auto-created topics
+  numPartitions: 3
+  # Default replication factor (1 for single-broker)
+  defaultReplicationFactor: 1
+  # Log retention (7 days as per spec)
+  logRetentionHours: 168
+  # Log segment size
+  logSegmentBytes: 1073741824
+
+# Listener configuration
+listeners:
+  client:
+    protocol: PLAINTEXT
+  controller:
+    protocol: PLAINTEXT
+  interbroker:
+    protocol: PLAINTEXT
+
+# Controller configuration (KRaft mode)
+controller:
+  replicaCount: 1
+  persistence:
+    enabled: false
+
+# Disable external access for local development
+externalAccess:
+  enabled: false
+
+# JMX metrics (disabled for local to save resources)
+metrics:
+  kafka:
+    enabled: false
+  jmx:
+    enabled: false
+
+# Service configuration
+service:
+  type: ClusterIP
+  ports:
+    client: 9092
+
+# Pod disruption budget (disabled for local)
+pdb:
+  create: false
+
+# Security context
+podSecurityContext:
+  fsGroup: 1001
+
+securityContext:
+  runAsUser: 1001
+  runAsNonRoot: true
+
+# Liveness and readiness probes
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  successThreshold: 1

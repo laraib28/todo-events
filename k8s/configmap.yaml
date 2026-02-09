@@ -1,0 +1,27 @@
+# AI-Generated Kubernetes ConfigMap
+# Generated: 2026-01-08
+# Purpose: Non-sensitive configuration for Todo app
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-config
+  namespace: todo-app
+  labels:
+    app: todo-app
+data:
+  # Frontend configuration
+  NEXT_PUBLIC_API_URL: "http://api.todo.local/api"
+
+  # Backend configuration
+  ENVIRONMENT: "production"
+  CORS_ORIGINS: "http://todo.local,http://localhost:3000"
+  ALGORITHM: "HS256"
+  ACCESS_TOKEN_EXPIRE_HOURS: "24"
+
+  # OpenAI configuration
+  OPENAI_MODEL: "gpt-4o"
+  OPENAI_MAX_TOKENS: "500"
+  OPENAI_TEMPERATURE: "0.7"
+  CONVERSATION_HISTORY_LIMIT: "10"
+  CHAT_RATE_LIMIT: "60"

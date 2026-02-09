@@ -1,0 +1,204 @@
+# AI-Generated Helm Values
+# Generated: 2026-01-08
+# Purpose: Default configuration values for Todo app Helm chart
+
+# Global settings
+global:
+  namespace: todo-app
+  environment: production
+
+# Frontend configuration
+frontend:
+  enabled: true
+  replicaCount: 2
+
+  image:
+    repository: todo-frontend
+    tag: latest
+    pullPolicy: Never  # Change to IfNotPresent for registry-based images
+
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "500m"
+
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 3000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 3000
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+  env:
+    NODE_ENV: production
+    PORT: "3000"
+    HOSTNAME: "0.0.0.0"
+
+# Backend configuration
+backend:
+  enabled: true
+  replicaCount: 2
+
+  image:
+    repository: todo-backend
+    tag: latest
+    pullPolicy: Never  # Change to IfNotPresent for registry-based images
+
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8000
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "1000m"
+
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# ConfigMap values (non-sensitive)
+config:
+  # Frontend configuration
+  NEXT_PUBLIC_API_URL: "http://api.todo.local/api"
+
+  # Backend configuration
+  ENVIRONMENT: "production"
+  CORS_ORIGINS: "http://todo.local,http://localhost:3000"
+  ALGORITHM: "HS256"
+  ACCESS_TOKEN_EXPIRE_HOURS: "24"
+
+  # OpenAI configuration
+  OPENAI_MODEL: "gpt-4o"
+  OPENAI_MAX_TOKENS: "500"
+  OPENAI_TEMPERATURE: "0.7"
+  CONVERSATION_HISTORY_LIMIT: "10"
+  CHAT_RATE_LIMIT: "60"
+
+# Secret values (must be base64 encoded before deployment)
+# WARNING: Do not commit actual secret values to version control
+secrets:
+  # Database connection string
+  # Example: postgresql://user:password@neon-host/db?sslmode=require
+  DATABASE_URL: "<BASE64_ENCODED_DATABASE_URL>"
+
+  # OpenAI API key
+  # Example: sk-proj-xxxxxxxxxxxxxxxx
+  OPENAI_API_KEY: "<BASE64_ENCODED_OPENAI_API_KEY>"
+
+  # JWT secret for Better Auth
+  # Generate: openssl rand -base64 32
+  BETTER_AUTH_SECRET: "<BASE64_ENCODED_JWT_SECRET>"
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+
+  hosts:
+    - host: todo.local
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+          port: 80
+
+    - host: api.todo.local
+      paths:
+        - path: /
+          pathType: Prefix
+          service: backend
+          port: 80
+
+  tls: []
+  # Example TLS configuration:
+  # tls:
+  #   - secretName: todo-tls
+  #     hosts:
+  #       - todo.local
+  #       - api.todo.local
+
+# Autoscaling configuration (optional)
+autoscaling:
+  frontend:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+  backend:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+# Pod security context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  fsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
+
+# Service account
+serviceAccount:
+  create: true
+  name: todo-app-sa
+  annotations: {}
+
+# Network policies (optional)
+networkPolicy:
+  enabled: false
+  policyTypes:
+    - Ingress
+    - Egress
+
+# Monitoring and observability
+monitoring:
+  enabled: false
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    scrapeTimeout: 10s

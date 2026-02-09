@@ -1,0 +1,22 @@
+# AI-Generated Kubernetes Service - Frontend
+# Generated: 2026-01-08
+# Purpose: Expose frontend deployment within cluster
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-frontend
+  namespace: todo-app
+  labels:
+    app: todo-frontend
+    tier: frontend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: todo-frontend
+  sessionAffinity: None

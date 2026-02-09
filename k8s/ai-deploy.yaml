@@ -1,0 +1,167 @@
+# AI-Generated Deployment Orchestration Manifest
+# Generated: 2026-01-08
+# Purpose: AI-first deployment orchestration for Todo app on Minikube
+# This manifest defines the complete deployment sequence
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deployment-orchestration
+  namespace: kube-system
+  labels:
+    app: todo-deployment
+    managed-by: ai
+data:
+  deployment-sequence.yaml: |
+    # AI-Driven Deployment Sequence
+    # Execute in order for successful deployment
+
+    deployment:
+      name: todo-app-ai-deployment
+      version: 1.0.0
+      strategy: ai-first
+
+      phases:
+        - name: pre-deployment
+          order: 1
+          steps:
+            - verify-cluster-health
+            - verify-docker-daemon
+            - verify-images-availability
+            - verify-secrets-configuration
+
+        - name: image-preparation
+          order: 2
+          steps:
+            - build-frontend-image:
+                command: docker build -t todo-frontend:latest ./frontend
+                expected-size: "<150MB"
+                validation: docker images | grep todo-frontend
+
+            - build-backend-image:
+                command: docker build -t todo-backend:latest ./backend
+                expected-size: "<200MB"
+                validation: docker images | grep todo-backend
+
+            - load-frontend-to-minikube:
+                command: minikube image load todo-frontend:latest
+                validation: minikube image ls | grep todo-frontend
+
+            - load-backend-to-minikube:
+                command: minikube image load todo-backend:latest
+                validation: minikube image ls | grep todo-backend
+
+        - name: secrets-preparation
+          order: 3
+          steps:
+            - encode-database-url:
+                description: Base64 encode DATABASE_URL
+                command: echo -n "$DATABASE_URL" | base64
+                target: k8s/secret.yaml
+
+            - encode-openai-key:
+                description: Base64 encode OPENAI_API_KEY
+                command: echo -n "$OPENAI_API_KEY" | base64
+                target: k8s/secret.yaml
+
+            - generate-jwt-secret:
+                description: Generate and encode JWT secret
+                command: echo -n "$(openssl rand -base64 32)" | base64
+                target: k8s/secret.yaml
+
+        - name: kubernetes-deployment
+          order: 4
+          steps:
+            - create-namespace:
+                manifest: k8s/namespace.yaml
+                command: kubectl apply -f k8s/namespace.yaml
+                validation: kubectl get namespace todo-app
+
+            - create-configmap:
+                manifest: k8s/configmap.yaml
+                command: kubectl apply -f k8s/configmap.yaml
+                validation: kubectl get configmap -n todo-app
+
+            - create-secret:
+                manifest: k8s/secret.yaml
+                command: kubectl apply -f k8s/secret.yaml
+                validation: kubectl get secret -n todo-app
+
+            - deploy-frontend:
+                manifest: k8s/deployment-frontend.yaml
+                command: kubectl apply -f k8s/deployment-frontend.yaml
+                validation: kubectl get deployment todo-frontend -n todo-app
+                wait: kubectl rollout status deployment/todo-frontend -n todo-app --timeout=120s
+
+            - deploy-backend:
+                manifest: k8s/deployment-backend.yaml
+                command: kubectl apply -f k8s/deployment-backend.yaml
+                validation: kubectl get deployment todo-backend -n todo-app
+                wait: kubectl rollout status deployment/todo-backend -n todo-app --timeout=120s
+
+            - create-frontend-service:
+                manifest: k8s/service-frontend.yaml
+                command: kubectl apply -f k8s/service-frontend.yaml
+                validation: kubectl get service todo-frontend -n todo-app
+
+            - create-backend-service:
+                manifest: k8s/service-backend.yaml
+                command: kubectl apply -f k8s/service-backend.yaml
+                validation: kubectl get service todo-backend -n todo-app
+
+            - create-ingress:
+                manifest: k8s/ingress.yaml
+                command: kubectl apply -f k8s/ingress.yaml
+                validation: kubectl get ingress -n todo-app
+
+        - name: post-deployment-verification
+          order: 5
+          steps:
+            - verify-pods-running:
+                command: kubectl get pods -n todo-app
+                expected: All pods in Running state
+
+            - verify-services-ready:
+                command: kubectl get services -n todo-app
+                expected: All services have endpoints
+
+            - verify-ingress-configured:
+                command: kubectl get ingress -n todo-app
+                expected: Ingress has ADDRESS
+
+            - check-pod-logs:
+                command: kubectl logs -l tier=frontend -n todo-app --tail=20
+                expected: No error messages
+
+            - check-backend-health:
+                command: kubectl exec -n todo-app deployment/todo-backend -- curl -s http://localhost:8000/health
+                expected: '{"status":"ok"}'
+
+        - name: application-validation
+          order: 6
+          steps:
+            - configure-local-dns:
+                description: Add entries to /etc/hosts
+                command: echo "$(minikube ip) todo.local api.todo.local" | sudo tee -a /etc/hosts
+
+            - test-frontend-http:
+                command: curl -I http://todo.local
+                expected: HTTP 200 or 30x
+
+            - test-backend-health:
+                command: curl http://api.todo.local/health
+                expected: '{"status":"ok"}'
+
+            - test-backend-docs:
+                command: curl -I http://api.todo.local/docs
+                expected: HTTP 200
+
+      expected-outcomes:
+        - namespace: todo-app created
+        - deployments: 2 (frontend, backend) running
+        - replicas: 4 total (2 frontend + 2 backend)
+        - services: 2 (frontend, backend) with endpoints
+        - ingress: 1 with routes configured
+        - pods: All in Running state
+        - health-checks: All passing
+        - application: Accessible at http://todo.local

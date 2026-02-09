@@ -1,0 +1,61 @@
+# Dapr PubSub Component using Redis for Local Development
+#
+# Task: T-552 - Create k8s/dapr-components/pubsub-redis.yaml
+# Phase: Phase V - Event-Driven Architecture
+#
+# This component configures Dapr to use Redis as the message broker
+# for local development. Redis is simpler than Kafka and requires
+# fewer resources, making it ideal for Minikube.
+#
+# For production, use pubsub-kafka.yaml instead.
+#
+# Usage:
+#   kubectl apply -f pubsub-redis.yaml -n todo-app
+#
+# Prerequisites:
+#   - Redis installed in the cluster (Bitnami Helm chart recommended)
+#   - Dapr control plane installed
+#
+# Documentation:
+#   https://docs.dapr.io/reference/components-reference/supported-pubsub/setup-redis-pubsub/
+
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: todo-pubsub
+  namespace: todo-app
+spec:
+  type: pubsub.redis
+  version: v1
+  metadata:
+    # Redis host configuration
+    - name: redisHost
+      value: "redis-master.todo-app.svc.cluster.local:6379"
+    # Redis password (from Kubernetes Secret)
+    - name: redisPassword
+      secretKeyRef:
+        name: redis
+        key: redis-password
+    # Consumer identifier prefix
+    - name: consumerID
+      value: "todo-app"
+    # Enable message redelivery on failure
+    - name: enableTLS
+      value: "false"
+    # Process messages in order (required for event ordering)
+    - name: processingTimeout
+      value: "60s"
+    # Retry configuration
+    - name: redeliverInterval
+      value: "5s"
+    # Number of concurrent handlers per topic
+    - name: concurrency
+      value: "10"
+
+# Scopes restrict which apps can use this component
+scopes:
+  - backend-api
+  - reminder-service
+  - notification-service
+  - audit-service
+  - recurring-generator

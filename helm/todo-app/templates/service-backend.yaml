@@ -1,0 +1,24 @@
+# AI-Generated Helm Template - Backend Service
+# Generated: 2026-01-08
+
+{{- if .Values.backend.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Chart.Name }}-backend
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Chart.Name }}-backend
+    tier: backend
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+spec:
+  type: {{ .Values.backend.service.type }}
+  ports:
+  - port: {{ .Values.backend.service.port }}
+    targetPort: {{ .Values.backend.service.targetPort }}
+    protocol: TCP
+    name: http
+  selector:
+    app: {{ .Chart.Name }}-backend
+  sessionAffinity: None
+{{- end }}

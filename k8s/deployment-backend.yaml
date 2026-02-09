@@ -1,0 +1,138 @@
+# AI-Generated Kubernetes Deployment - Backend
+# Generated: 2026-01-08
+# Updated: 2026-01-14 (Phase V - Dapr Integration)
+# Purpose: Deploy FastAPI backend application with Dapr sidecar
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-backend
+  namespace: todo-app
+  labels:
+    app: todo-backend
+    tier: backend
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: todo-backend
+  template:
+    metadata:
+      labels:
+        app: todo-backend
+        tier: backend
+      # Phase V: Dapr annotations for sidecar injection
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "backend-api"
+        dapr.io/app-port: "8000"
+        dapr.io/log-level: "info"
+        dapr.io/enable-api-logging: "true"
+    spec:
+      containers:
+      - name: backend
+        image: todo-backend:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: todo-secrets
+              key: DATABASE_URL
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: todo-secrets
+              key: OPENAI_API_KEY
+        - name: BETTER_AUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: todo-secrets
+              key: BETTER_AUTH_SECRET
+        - name: ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: todo-config
+              key: ENVIRONMENT
+        - name: CORS_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: todo-config
+              key: CORS_ORIGINS
+        - name: ALGORITHM
+          valueFrom:
+            configMapKeyRef:
+              name: todo-config
+              key: ALGORITHM
+        - name: ACCESS_TOKEN_EXPIRE_HOURS
+          valueFrom:
+            configMapKeyRef:
+              name: todo-config
+              key: ACCESS_TOKEN_EXPIRE_HOURS
+        - name: OPENAI_MODEL
+          valueFrom:
+            configMapKeyRef:
+              name: todo-config
+              key: OPENAI_MODEL
+        - name: OPENAI_MAX_TOKENS
+          valueFrom:
+            configMapKeyRef:
+              name: todo-config
+              key: OPENAI_MAX_TOKENS
+        - name: OPENAI_TEMPERATURE
+          valueFrom:
+            configMapKeyRef:
+              name: todo-config
+              key: OPENAI_TEMPERATURE
+        - name: CONVERSATION_HISTORY_LIMIT
+          valueFrom:
+            configMapKeyRef:
+              name: todo-config
+              key: CONVERSATION_HISTORY_LIMIT
+        - name: CHAT_RATE_LIMIT
+          valueFrom:
+            configMapKeyRef:
+              name: todo-config
+              key: CHAT_RATE_LIMIT
+        # Phase V: Event publishing configuration
+        - name: EVENT_PUBLISHING_ENABLED
+          value: "true"
+        - name: DAPR_HOST
+          value: "localhost"
+        - name: DAPR_HTTP_PORT
+          value: "3500"
+        - name: DAPR_PUBSUB_NAME
+          value: "todo-pubsub"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+      restartPolicy: Always

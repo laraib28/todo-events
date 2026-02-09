@@ -1,0 +1,22 @@
+# AI-Generated Kubernetes Service - Backend
+# Generated: 2026-01-08
+# Purpose: Expose backend deployment within cluster
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-backend
+  namespace: todo-app
+  labels:
+    app: todo-backend
+    tier: backend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: todo-backend
+  sessionAffinity: None

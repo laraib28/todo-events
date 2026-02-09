@@ -1,0 +1,24 @@
+# AI-Generated Helm Template - Frontend Service
+# Generated: 2026-01-08
+
+{{- if .Values.frontend.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Chart.Name }}-frontend
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Chart.Name }}-frontend
+    tier: frontend
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+spec:
+  type: {{ .Values.frontend.service.type }}
+  ports:
+  - port: {{ .Values.frontend.service.port }}
+    targetPort: {{ .Values.frontend.service.targetPort }}
+    protocol: TCP
+    name: http
+  selector:
+    app: {{ .Chart.Name }}-frontend
+  sessionAffinity: None
+{{- end }}

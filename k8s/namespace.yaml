@@ -1,0 +1,12 @@
+# AI-Generated Kubernetes Namespace
+# Generated: 2026-01-08
+# Purpose: Isolate Todo app resources in dedicated namespace
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: todo-app
+  labels:
+    app: todo-app
+    environment: local
+    managed-by: ai
